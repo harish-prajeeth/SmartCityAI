@@ -818,7 +818,7 @@ if "🏠 Dashboard" in selected_page:
                     <span style="color:#76b900; font-weight: 700;">13 ms</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:5px;">
-                    <span style="color:rgba(255,255,255,0.5);">SQLite Database</span>
+                    <span style="color:rgba(255,255,255,0.5);">MongoDB Database</span>
                     <span style="color:#10b981; font-weight: 700;">Connected</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom:5px;">
