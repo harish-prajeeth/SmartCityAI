@@ -320,6 +320,10 @@ st.markdown("""
     ::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.3);
     }
+    /* Hover dropdown for notification bell */
+    .notif-container:hover .notif-dropdown {
+        display: block !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -451,14 +455,54 @@ with col_clock_notif:
         """
         components.html(clock_html, height=50)
     with col_n:
-        notif_count = 3
+        # Load the 3 most recent alerts dynamically from database
+        recent_alerts = alerts_rows[:3]
+        notif_count = len(recent_alerts)
+        
+        recent_alerts_html = ""
+        if recent_alerts:
+            for a in recent_alerts:
+                # a: [id, timestamp, severity, alert_type, message, related_vehicle_id]
+                color = "#ef4444" if a[2] in ["CRITICAL", "HIGH"] else "#fbbf24"
+                badge = "🔴" if a[2] in ["CRITICAL", "HIGH"] else "🟡"
+                recent_alerts_html += f"""
+                <div style="font-size: 0.7rem; color: rgba(255,255,255,0.85); line-height: 1.4; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 6px 0;">
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; color: {color}; margin-bottom: 2px;">
+                        <span>{badge} {a[3]}</span>
+                        <span style="font-size: 0.6rem; opacity: 0.6; font-weight: normal; color: rgba(255,255,255,0.5);">{a[1].split(' ')[1] if ' ' in a[1] else a[1]}</span>
+                    </div>
+                    <div style="color: rgba(255,255,255,0.7);">{a[4]}</div>
+                </div>
+                """
+        else:
+            recent_alerts_html = """
+            <div style="font-size: 0.7rem; color: rgba(255,255,255,0.4); text-align: center; padding: 12px 0;">
+                No recent alerts
+            </div>
+            """
+
         st.markdown(f"""
         <div style="text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 15px; padding-top: 10px;">
-            <div class="notif-bell" style="cursor: pointer; position: relative;">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="#ffffff" style="width: 24px; height: 24px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                </svg>
-                <span style="position: absolute; top: -5px; right: -5px; background-color: #ef4444; border-radius: 50%; color: white; font-size: 0.6rem; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 0 8px #ef4444;">{notif_count}</span>
+            <div class="notif-container" style="position: relative; display: inline-block;">
+                <div class="notif-bell" style="cursor: pointer; position: relative;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="#ffffff" style="width: 24px; height: 24px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                    </svg>
+                    <span style="position: absolute; top: -5px; right: -5px; background-color: #ef4444; border-radius: 50%; color: white; font-size: 0.6rem; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 0 8px #ef4444;">{notif_count}</span>
+                </div>
+                <!-- Interactive Dropdown list on Hover -->
+                <div class="notif-dropdown" style="display: none; position: absolute; right: 0; top: 30px; width: 300px; background: rgba(5, 8, 22, 0.98); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); z-index: 10000; text-align: left; padding: 12px; backdrop-filter: blur(15px);">
+                    <div style="font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 700; color: #ffffff; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>🔔 LIVE INCIDENT ALERTS</span>
+                        <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1px 6px; border-radius: 4px; font-size: 0.65rem; color: #ef4444; font-weight: bold;">{notif_count} Active</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; max-height: 250px; overflow-y: auto;">
+                        {recent_alerts_html}
+                    </div>
+                    <div style="font-family: 'Space Grotesk', sans-serif; font-size: 0.65rem; text-align: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08);">
+                        <span style="color: rgba(255,255,255,0.4);">Hover off to close panel</span>
+                    </div>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
