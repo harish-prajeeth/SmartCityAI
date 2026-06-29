@@ -54,11 +54,11 @@ class DatabaseManager:
         })
 
     def fetch_traffic_logs(self):
-        logs = list(self.db.traffic_log.find().sort("_id", pymongo.DESCENDING))
+        logs = list(self.db.traffic_log.find().sort("timestamp", pymongo.ASCENDING))
         rows = []
-        for log in logs:
+        for idx, log in enumerate(logs, start=1):
             rows.append((
-                str(log["_id"]),
+                idx,
                 log.get("timestamp"),
                 log.get("frame_no"),
                 log.get("vehicle_count"),
@@ -69,14 +69,14 @@ class DatabaseManager:
                 log.get("avg_speed"),
                 log.get("congestion_level")
             ))
-        return rows
+        return rows[::-1]
 
     def fetch_violations(self):
-        vios = list(self.db.violations.find().sort("_id", pymongo.DESCENDING))
+        vios = list(self.db.violations.find().sort("timestamp", pymongo.ASCENDING))
         rows = []
-        for v in vios:
+        for idx, v in enumerate(vios, start=1):
             rows.append((
-                str(v["_id"]),
+                idx,
                 v.get("timestamp"),
                 v.get("frame_no"),
                 v.get("vehicle_id"),
@@ -85,21 +85,21 @@ class DatabaseManager:
                 v.get("details"),
                 v.get("evidence_image_path")
             ))
-        return rows
+        return rows[::-1]
 
     def fetch_alerts(self):
-        alrts = list(self.db.alerts.find().sort("_id", pymongo.DESCENDING))
+        alrts = list(self.db.alerts.find().sort("timestamp", pymongo.ASCENDING))
         rows = []
-        for a in alrts:
+        for idx, a in enumerate(alrts, start=1):
             rows.append((
-                str(a["_id"]),
+                idx,
                 a.get("timestamp"),
                 a.get("severity"),
                 a.get("alert_type"),
                 a.get("message"),
                 a.get("related_vehicle_id")
             ))
-        return rows
+        return rows[::-1]
 
     def fetch_summary(self):
         total_traffic = self.db.traffic_log.count_documents({})
