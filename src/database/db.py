@@ -1,145 +1,126 @@
 # src/database/db.py
 
-import sqlite3
-from pathlib import Path
+from pymongo import MongoClient
+import pymongo
 from datetime import datetime
-
-# Resolve paths relative to project root
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-DB_PATH = str(PROJECT_ROOT / "database" / "smartcity.db")
-SCHEMA_PATH = str(PROJECT_ROOT / "database" / "schema.sql")
 
 
 class DatabaseManager:
-    def __init__(self, db_path=DB_PATH):
-        self.db_path = db_path
-        self._ensure_database()
-
-    def _connect(self):
-        return sqlite3.connect(self.db_path)
-
-    def _ensure_database(self):
-        db_file = Path(self.db_path)
-        db_file.parent.mkdir(exist_ok=True)
-        
-        conn = self._connect()
-        cursor = conn.cursor()
-
-        # Check if traffic_log table already exists before executing schema to avoid wiping out data
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='traffic_log'")
-        table_exists = cursor.fetchone()
-
-        if not table_exists:
-            with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
-                schema = f.read()
-            cursor.executescript(schema)
-            conn.commit()
-            
-        conn.close()
+    def __init__(self, uri="mongodb://localhost:27017/", db_name="smartcity"):
+        self.uri = uri
+        self.db_name = db_name
+        self.client = MongoClient(self.uri)
+        self.db = self.client[self.db_name]
 
     def insert_traffic_log(self, timestamp, frame_no, vehicle_count, car_count, bike_count, bus_count, truck_count, avg_speed, congestion_level):
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO traffic_log (
-                timestamp, frame_no, vehicle_count, car_count, bike_count, bus_count, truck_count, avg_speed, congestion_level
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (timestamp, frame_no, vehicle_count, car_count, bike_count, bus_count, truck_count, avg_speed, congestion_level))
-        conn.commit()
-        conn.close()
+        self.db.traffic_log.insert_one({
+            "timestamp": timestamp,
+            "frame_no": frame_no,
+            "vehicle_count": vehicle_count,
+            "car_count": car_count,
+            "bike_count": bike_count,
+            "bus_count": bus_count,
+            "truck_count": truck_count,
+            "avg_speed": avg_speed,
+            "congestion_level": congestion_level
+        })
 
     def insert_violation(self, timestamp, frame_no, vehicle_id, violation_type, confidence, details, evidence_image_path):
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO violations (timestamp, frame_no, vehicle_id, violation_type, confidence, details, evidence_image_path)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (timestamp, frame_no, vehicle_id, violation_type, confidence, details, evidence_image_path))
-        conn.commit()
-        conn.close()
+        self.db.violations.insert_one({
+            "timestamp": timestamp,
+            "frame_no": frame_no,
+            "vehicle_id": vehicle_id,
+            "violation_type": violation_type,
+            "confidence": confidence,
+            "details": details,
+            "evidence_image_path": evidence_image_path
+        })
 
     def insert_alert(self, timestamp, severity, alert_type, message, related_vehicle_id):
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO alerts (timestamp, severity, alert_type, message, related_vehicle_id)
-            VALUES (?, ?, ?, ?, ?)
-        """, (timestamp, severity, alert_type, message, related_vehicle_id))
-        conn.commit()
-        conn.close()
+        self.db.alerts.insert_one({
+            "timestamp": timestamp,
+            "severity": severity,
+            "alert_type": alert_type,
+            "message": message,
+            "related_vehicle_id": related_vehicle_id
+        })
 
     def insert_parking_event(self, timestamp, vehicle_id, parked_duration, status):
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO parking_events (timestamp, vehicle_id, parked_duration, status)
-            VALUES (?, ?, ?, ?)
-        """, (timestamp, vehicle_id, parked_duration, status))
-        conn.commit()
-        conn.close()
+        self.db.parking_events.insert_one({
+            "timestamp": timestamp,
+            "vehicle_id": vehicle_id,
+            "parked_duration": parked_duration,
+            "status": status
+        })
 
     def fetch_traffic_logs(self):
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM traffic_log ORDER BY id DESC")
-        rows = cursor.fetchall()
-        conn.close()
+        logs = list(self.db.traffic_log.find().sort("_id", pymongo.DESCENDING))
+        rows = []
+        for log in logs:
+            rows.append((
+                str(log["_id"]),
+                log.get("timestamp"),
+                log.get("frame_no"),
+                log.get("vehicle_count"),
+                log.get("car_count"),
+                log.get("bike_count"),
+                log.get("bus_count"),
+                log.get("truck_count"),
+                log.get("avg_speed"),
+                log.get("congestion_level")
+            ))
         return rows
 
     def fetch_violations(self):
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM violations ORDER BY id DESC")
-        rows = cursor.fetchall()
-        conn.close()
+        vios = list(self.db.violations.find().sort("_id", pymongo.DESCENDING))
+        rows = []
+        for v in vios:
+            rows.append((
+                str(v["_id"]),
+                v.get("timestamp"),
+                v.get("frame_no"),
+                v.get("vehicle_id"),
+                v.get("violation_type"),
+                v.get("confidence"),
+                v.get("details"),
+                v.get("evidence_image_path")
+            ))
         return rows
 
     def fetch_alerts(self):
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM alerts ORDER BY id DESC")
-        rows = cursor.fetchall()
-        conn.close()
+        alrts = list(self.db.alerts.find().sort("_id", pymongo.DESCENDING))
+        rows = []
+        for a in alrts:
+            rows.append((
+                str(a["_id"]),
+                a.get("timestamp"),
+                a.get("severity"),
+                a.get("alert_type"),
+                a.get("message"),
+                a.get("related_vehicle_id")
+            ))
         return rows
 
     def fetch_summary(self):
-        conn = self._connect()
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT COUNT(*) FROM traffic_log")
-        total_traffic_entries = cursor.fetchone()[0]
-
-        cursor.execute("SELECT COUNT(*) FROM violations")
-        total_violations = cursor.fetchone()[0]
-
-        cursor.execute("SELECT COUNT(*) FROM alerts")
-        total_alerts = cursor.fetchone()[0]
-
-        cursor.execute("""
-            SELECT vehicle_count, avg_speed, congestion_level
-            FROM traffic_log
-            WHERE vehicle_count > 0
-            ORDER BY id DESC LIMIT 1
-        """)
-        latest = cursor.fetchone()
+        total_traffic = self.db.traffic_log.count_documents({})
+        total_violations = self.db.violations.count_documents({})
+        total_alerts = self.db.alerts.count_documents({})
         
-        # If no active vehicle logs exist, fall back to the absolute latest entry
-        if not latest:
-            cursor.execute("""
-                SELECT vehicle_count, avg_speed, congestion_level
-                FROM traffic_log
-                ORDER BY id DESC LIMIT 1
-            """)
-            latest = cursor.fetchone()
-
-        conn.close()
-
+        # Get latest active traffic log
+        latest_active = list(self.db.traffic_log.find({"vehicle_count": {"$gt": 0}}).sort("_id", pymongo.DESCENDING).limit(1))
+        
+        if latest_active:
+            latest = latest_active[0]
+        else:
+            latest_list = list(self.db.traffic_log.find().sort("_id", pymongo.DESCENDING).limit(1))
+            latest = latest_list[0] if latest_list else None
+            
         summary = {
-            "total_traffic_entries": total_traffic_entries,
+            "total_traffic_entries": total_traffic,
             "total_violations": total_violations,
             "total_alerts": total_alerts,
-            "latest_vehicle_count": latest[0] if latest else 0,
-            "latest_avg_speed": latest[1] if latest else 0.0,
-            "latest_congestion_level": latest[2] if latest else "N/A"
+            "latest_vehicle_count": latest.get("vehicle_count", 0) if latest else 0,
+            "latest_avg_speed": latest.get("avg_speed", 0.0) if latest else 0.0,
+            "latest_congestion_level": latest.get("congestion_level", "N/A") if latest else "N/A"
         }
         return summary
