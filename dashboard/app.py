@@ -895,7 +895,7 @@ if "🏠 Dashboard" in selected_page:
                 <span style="color: #76b900;">[SYS LOG 14:48:12]</span> TensorRT model pipeline compiled successfully with CUDA 12.2 core framework.
             </div>
             <div style="border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 4px;">
-                <span style="color: #3b82f6;">[DB INF 14:47:05]</span> Database synchronization completed: 466 logs flushed to local smartcity.db storage.
+                <span style="color: #3b82f6;">[DB INF 14:47:05]</span> Database synchronization completed: 466 documents synced to MongoDB localhost:27017.
             </div>
             <div style="border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 4px;">
                 <span style="color: #fbbf24;">[ALRT ENG 14:45:00]</span> 5 violations matching parameters processed. Screenshot logs pushed to Edge CDN servers.
@@ -1643,7 +1643,7 @@ st.markdown("""
         <span>GPU INFERENCE RATE: <strong>31 FPS</strong></span>
     </div>
     <div class="status-bar-item">
-        <span>SQLITE DATABASE: <strong>CONNECTED</strong></span>
+        <span>MONGODB DATABASE: <strong>CONNECTED</strong></span>
     </div>
     <div class="status-bar-item">
         <span>LOCAL STORAGE: <strong>83%</strong></span>
