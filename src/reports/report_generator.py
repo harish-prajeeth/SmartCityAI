@@ -14,8 +14,8 @@ DEFAULT_PDF_PATH = str(PROJECT_ROOT / "outputs" / "reports" / "traffic_report.pd
 
 
 class ReportGenerator:
-    def __init__(self):
-        self.db = DatabaseManager()
+    def __init__(self, db=None):
+        self.db = db if db is not None else DatabaseManager()
         os.makedirs(str(PROJECT_ROOT / "outputs" / "reports"), exist_ok=True)
 
     def generate_csv_report(self, filename=DEFAULT_CSV_PATH):

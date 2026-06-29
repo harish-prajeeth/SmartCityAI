@@ -324,8 +324,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Database Manager and Report Generator
-db = DatabaseManager()
-rg = ReportGenerator()
+@st.cache_resource
+def get_db_manager():
+    return DatabaseManager()
+
+db = get_db_manager()
+rg = ReportGenerator(db)
 
 # Helper: Fetch summary data safely
 summary = db.fetch_summary()
