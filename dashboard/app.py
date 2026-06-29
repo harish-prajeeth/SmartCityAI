@@ -1504,7 +1504,7 @@ elif "📈 Reports" in selected_page:
         <div class="glass-card" style="height: 100%;">
             <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; margin-bottom: 1.2rem; font-size:1.1rem; color: #60a5fa;">📁 Report Compiler Configuration</div>
             <div style="font-size: 0.85rem; line-height: 1.6; margin-bottom: 2rem;">
-                This action queries all logged tables in the SQLite database to generate cumulative traffic logs, recorded violations, visual evidence screenshot pathways, and critical congestion levels.
+                This action queries all logged tables in the MongoDB database to generate cumulative traffic logs, recorded violations, visual evidence screenshot pathways, and critical congestion levels.
             </div>
         """, unsafe_allow_html=True)
         
